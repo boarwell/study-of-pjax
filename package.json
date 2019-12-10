@@ -1,0 +1,21 @@
+{
+  "name": "study-of-pjax",
+  "version": "0.0.1",
+  "description": "Study of PJAX",
+  "main": "./build/main.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boarwell/study-of-pjax.git"
+  },
+  "keywords": [],
+  "author": "boarwell",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/boarwell/study-of-pjax/issues"
+  },
+  "homepage": "https://github.com/boarwell/study-of-pjax#readme",
+  "devDependencies": {
+    "typescript": "^3.7.3"
+  }
+}
