@@ -1,25 +1,25 @@
-type FetchedDOM = {
+type DOM = {
   head: HTMLHeadElement;
   root: HTMLElement;
 };
 
-type SerializedDOM = { [P in keyof FetchedDOM]: string };
+type SerializedDOM = { [P in keyof DOM]: string };
 
-const serialize = ({ head, root }: FetchedDOM): string => {
+const serialize = ({ head, root }: DOM): string => {
   const headHTML = head.outerHTML;
   const rootHTML = root.outerHTML;
 
   return JSON.stringify({ head: headHTML, root: rootHTML });
 };
 
-const restorePage = (serializedState: string): void => {
-  const state: SerializedDOM = JSON.parse(serializedState);
+const restorePage = (serializedDOMString: string): void => {
+  const state: SerializedDOM = JSON.parse(serializedDOMString);
   const head = document.createElement('head');
   head.innerHTML = state.head;
   const root = document.createElement('div');
   root.innerHTML = state.root;
 
-  const dom: FetchedDOM = {
+  const dom: DOM = {
     head,
     root
   };
@@ -27,7 +27,7 @@ const restorePage = (serializedState: string): void => {
   replaceDOM(dom);
 };
 
-const getHTML = async (src: string): Promise<FetchedDOM> => {
+const getHTML = async (src: string): Promise<DOM> => {
   // if we don't specify { cache: 'no-store' },
   // Chrome caches responses and doesn't send request (on my environment).
   const res = await fetch(src, { cache: 'no-store' });
@@ -41,16 +41,16 @@ const getHTML = async (src: string): Promise<FetchedDOM> => {
   };
 };
 
-const replaceHead = (newDOM: FetchedDOM): void => {
+const replaceHead = (newDOM: DOM): void => {
   document.head.replaceWith(newDOM.head);
 };
 
-const replaceRoot = (newDOM: FetchedDOM): void => {
+const replaceRoot = (newDOM: DOM): void => {
   const root = document.querySelector('#domrep-root') as HTMLElement;
   root.replaceWith(newDOM.root);
 };
 
-const replaceDOM = (newDOM: FetchedDOM): void => {
+const replaceDOM = (newDOM: DOM): void => {
   replaceHead(newDOM);
   replaceRoot(newDOM);
 };

@@ -4,8 +4,8 @@ const serialize = ({ head, root }) => {
     const rootHTML = root.outerHTML;
     return JSON.stringify({ head: headHTML, root: rootHTML });
 };
-const restorePage = (serializedState) => {
-    const state = JSON.parse(serializedState);
+const restorePage = (serializedDOMString) => {
+    const state = JSON.parse(serializedDOMString);
     const head = document.createElement('head');
     head.innerHTML = state.head;
     const root = document.createElement('div');
