@@ -12,6 +12,16 @@ const serialize = ({ head, root }: DOM): string => {
   return JSON.stringify({ head: headHTML, root: rootHTML });
 };
 
+const createDOMFrom = (html: string): DOM => {
+  const dp = new DOMParser();
+  const dom = dp.parseFromString(html, 'text/html');
+
+  return {
+    head: dom.head,
+    root: dom.querySelector('#domrep-root') as HTMLElement
+  };
+};
+
 const restorePage = (serializedDOMString: string): void => {
   const state: SerializedDOM = JSON.parse(serializedDOMString);
   const head = document.createElement('head');
@@ -32,13 +42,8 @@ const getHTML = async (src: string): Promise<DOM> => {
   // Chrome caches responses and doesn't send request (on my environment).
   const res = await fetch(src, { cache: 'no-store' });
   const html = await res.text();
-  const domParser = new DOMParser();
-  const fetchedDOM = domParser.parseFromString(html, 'text/html');
 
-  return {
-    head: fetchedDOM.head,
-    root: fetchedDOM.querySelector('#domrep-root') as HTMLElement
-  };
+  return createDOMFrom(html);
 };
 
 const replaceHead = (newDOM: DOM): void => {
@@ -55,7 +60,21 @@ const replaceDOM = (newDOM: DOM): void => {
   replaceRoot(newDOM);
 };
 
+/**
+ * for the following situation:
+ * newly load a page -> go to somewhere -> browser back
+ *
+ * if we don't save the initial page state,
+ * we lost the way to back to there.
+ */
+const saveCurrentState = (): void => {
+  const html = document.documentElement.outerHTML;
+  history.replaceState(serialize(createDOMFrom(html)), '', null);
+};
+
 const main = () => {
+  saveCurrentState();
+
   const sampleButton = document.querySelector('#sample')!;
   sampleButton.addEventListener('click', async () => {
     const res = await getHTML('/sample.html');
