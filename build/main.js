@@ -1,4 +1,21 @@
 "use strict";
+const serialize = ({ head, root }) => {
+    const headHTML = head.outerHTML;
+    const rootHTML = root.outerHTML;
+    return JSON.stringify({ head: headHTML, root: rootHTML });
+};
+const restorePage = (serializedState) => {
+    const state = JSON.parse(serializedState);
+    const head = document.createElement('head');
+    head.innerHTML = state.head;
+    const root = document.createElement('div');
+    root.innerHTML = state.root;
+    const dom = {
+        head,
+        root
+    };
+    replaceDOM(dom);
+};
 const getHTML = async (src) => {
     // if we don't specify { cache: 'no-store' },
     // Chrome caches responses and doesn't send request (on my environment).
@@ -27,16 +44,16 @@ const main = () => {
     sampleButton.addEventListener('click', async () => {
         const res = await getHTML('/sample.html');
         replaceDOM(res);
-        // TODO: add DOM string as data so that
-        // we can restore page contents when we pushed the back button.
-        history.pushState(null, '', '/sample.html');
+        history.pushState(serialize(res), '', '/sample.html');
     });
     const indexButton = document.querySelector('#index');
     indexButton.addEventListener('click', async () => {
         const res = await getHTML('/index.html');
         replaceDOM(res);
-        // TODO: same as above.
-        history.pushState(null, '', '/index.html');
+        history.pushState(serialize(res), '', '/index.html');
+    });
+    window.addEventListener('popstate', ev => {
+        restorePage(ev.state);
     });
 };
 main();
