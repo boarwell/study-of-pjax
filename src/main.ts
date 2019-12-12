@@ -29,10 +29,7 @@ const restorePage = (serializedDOMString: string): void => {
   const root = document.createElement('div');
   root.innerHTML = state.root;
 
-  const dom: DOM = {
-    head,
-    root
-  };
+  const dom: DOM = { head, root };
 
   replaceDOM(dom);
 };
@@ -52,7 +49,10 @@ const replaceHead = (newDOM: DOM): void => {
 
 const replaceRoot = (newDOM: DOM): void => {
   const root = document.querySelector('#domrep-root') as HTMLElement;
-  root.replaceWith(newDOM.root);
+  // if we use `replaceWith()` to the observed element,
+  // it doesn't fire mutation event.
+  root.innerHTML = '';
+  root.appendChild(newDOM.root);
 };
 
 const replaceDOM = (newDOM: DOM): void => {
@@ -72,8 +72,29 @@ const saveCurrentState = (): void => {
   history.replaceState(serialize(createDOMFrom(html)), '', null);
 };
 
+const onPopstate = (ev: PopStateEvent): void => {
+  restorePage(ev.state);
+};
+
+const observe = (): void => {
+  const mo = new MutationObserver(mutations => {
+    console.log('mutation');
+    for (const mutation of mutations) {
+      switch (mutation.type) {
+        case 'childList':
+          // TODO:
+          break;
+      }
+    }
+  });
+
+  const root = document.querySelector('#domrep-root')!;
+  mo.observe(root, { childList: true });
+};
+
 const main = () => {
   saveCurrentState();
+  observe();
 
   const sampleButton = document.querySelector('#sample')!;
   sampleButton.addEventListener('click', async () => {
@@ -89,9 +110,7 @@ const main = () => {
     history.pushState(serialize(res), '', '/index.html');
   });
 
-  window.addEventListener('popstate', ev => {
-    restorePage(ev.state);
-  });
+  window.addEventListener('popstate', onPopstate);
 };
 
 main();
