@@ -114,15 +114,14 @@ const onMutation: MutationCallback = (mutations: MutationRecord[]) => {
     });
 };
 
-const observe = (root: Element): void => {
-  const mo = new MutationObserver(onMutation);
-  mo.observe(root, { childList: true });
-};
-
 const main = () => {
   saveCurrentState();
   const root = document.querySelector(`#${ID}`)!;
-  observe(root);
+  if (root === null) {
+    console.log('root is null...');
+    return;
+  }
+  new MutationObserver(onMutation).observe(root, { childList: true });
   setup(root);
   window.addEventListener('popstate', onPopstate);
 };
