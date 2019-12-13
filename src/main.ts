@@ -20,7 +20,7 @@ const createDOMFrom = (html: string): DOM => {
 
   return {
     head: dom.head,
-    root: dom.querySelector(`${ID}`) as HTMLElement
+    root: dom.querySelector(`#${ID}`) as HTMLElement
   };
 };
 
@@ -78,7 +78,7 @@ const onPopstate = (ev: PopStateEvent): void => {
   restorePage(ev.state);
 };
 
-const observe = (): void => {
+const observe = (root: Element): void => {
   const mo = new MutationObserver(mutations => {
     console.log('mutation');
     for (const mutation of mutations) {
@@ -90,27 +90,26 @@ const observe = (): void => {
     }
   });
 
-  const root = document.querySelector(`#${ID}`)!;
   mo.observe(root, { childList: true });
+};
+
+const setup = (id: string): void => {
+  const button = document.querySelector(`#${id}`)!;
+
+  button.addEventListener('click', async () => {
+    const res = await getHTML(`/${id}.html`);
+    replaceDOM(res);
+    history.pushState(serialize(res), '', `/${id}.html`);
+  });
 };
 
 const main = () => {
   saveCurrentState();
-  observe();
+  const root = document.querySelector(`#${ID}`)!;
+  observe(root);
 
-  const sampleButton = document.querySelector('#sample')!;
-  sampleButton.addEventListener('click', async () => {
-    const res = await getHTML('/sample.html');
-    replaceDOM(res);
-    history.pushState(serialize(res), '', '/sample.html');
-  });
-
-  const indexButton = document.querySelector('#index')!;
-  indexButton.addEventListener('click', async () => {
-    const res = await getHTML('/index.html');
-    replaceDOM(res);
-    history.pushState(serialize(res), '', '/index.html');
-  });
+  setup('sample');
+  setup('index');
 
   window.addEventListener('popstate', onPopstate);
 };

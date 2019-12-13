@@ -10,7 +10,7 @@ const createDOMFrom = (html) => {
     const dom = dp.parseFromString(html, 'text/html');
     return {
         head: dom.head,
-        root: dom.querySelector(`${ID}`)
+        root: dom.querySelector(`#${ID}`)
     };
 };
 const restorePage = (serializedDOMString) => {
@@ -57,7 +57,7 @@ const saveCurrentState = () => {
 const onPopstate = (ev) => {
     restorePage(ev.state);
 };
-const observe = () => {
+const observe = (root) => {
     const mo = new MutationObserver(mutations => {
         console.log('mutation');
         for (const mutation of mutations) {
@@ -68,24 +68,22 @@ const observe = () => {
             }
         }
     });
-    const root = document.querySelector(`#${ID}`);
     mo.observe(root, { childList: true });
+};
+const setup = (id) => {
+    const button = document.querySelector(`#${id}`);
+    button.addEventListener('click', async () => {
+        const res = await getHTML(`/${id}.html`);
+        replaceDOM(res);
+        history.pushState(serialize(res), '', `/${id}.html`);
+    });
 };
 const main = () => {
     saveCurrentState();
-    observe();
-    const sampleButton = document.querySelector('#sample');
-    sampleButton.addEventListener('click', async () => {
-        const res = await getHTML('/sample.html');
-        replaceDOM(res);
-        history.pushState(serialize(res), '', '/sample.html');
-    });
-    const indexButton = document.querySelector('#index');
-    indexButton.addEventListener('click', async () => {
-        const res = await getHTML('/index.html');
-        replaceDOM(res);
-        history.pushState(serialize(res), '', '/index.html');
-    });
+    const root = document.querySelector(`#${ID}`);
+    observe(root);
+    setup('sample');
+    setup('index');
     window.addEventListener('popstate', onPopstate);
 };
 main();
