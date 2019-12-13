@@ -54,36 +54,49 @@ const saveCurrentState = () => {
     const html = document.documentElement.outerHTML;
     history.replaceState(serialize(createDOMFrom(html)), '', null);
 };
+const hasHREF = (a) => a.href !== '';
+const withoutHash = (a) => new URL(a.href).hash === '';
+const isSameOriginWith = (currentURL) => (a) => new URL(a.href).origin === currentURL.origin;
+const setup = (root) => {
+    const currentURL = new URL(location.href);
+    const listOfATag = [...root.querySelectorAll('a')];
+    const targets = listOfATag
+        .filter(hasHREF)
+        .filter(withoutHash)
+        .filter(isSameOriginWith(currentURL));
+    targets.forEach(a => {
+        a.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const dest = e.target.href;
+            const res = await getHTML(dest);
+            replaceDOM(res);
+            history.pushState(serialize(res), '', dest);
+        });
+    });
+};
 const onPopstate = (ev) => {
     restorePage(ev.state);
 };
-const observe = (root) => {
-    const mo = new MutationObserver(mutations => {
-        console.log('mutation');
-        for (const mutation of mutations) {
-            switch (mutation.type) {
-                case 'childList':
-                    // TODO:
-                    break;
-            }
+const onMutation = (mutations) => {
+    console.log('mutation');
+    mutations
+        .filter(m => m.type === 'childList')
+        .forEach(() => {
+        const root_ = document.querySelector(`#${ID}`);
+        if (root_ !== null) {
+            setup(root_);
         }
     });
-    mo.observe(root, { childList: true });
 };
-const setup = (id) => {
-    const button = document.querySelector(`#${id}`);
-    button.addEventListener('click', async () => {
-        const res = await getHTML(`/${id}.html`);
-        replaceDOM(res);
-        history.pushState(serialize(res), '', `/${id}.html`);
-    });
+const observe = (root) => {
+    const mo = new MutationObserver(onMutation);
+    mo.observe(root, { childList: true });
 };
 const main = () => {
     saveCurrentState();
     const root = document.querySelector(`#${ID}`);
     observe(root);
-    setup('sample');
-    setup('index');
+    setup(root);
     window.addEventListener('popstate', onPopstate);
 };
 main();

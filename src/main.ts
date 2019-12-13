@@ -74,43 +74,56 @@ const saveCurrentState = (): void => {
   history.replaceState(serialize(createDOMFrom(html)), '', null);
 };
 
+const hasHREF = (a: HTMLAnchorElement) => a.href !== '';
+const withoutHash = (a: HTMLAnchorElement) => new URL(a.href).hash === '';
+const isSameOriginWith = (currentURL: URL) => (a: HTMLAnchorElement) =>
+  new URL(a.href).origin === currentURL.origin;
+
+const setup = (root: Element): void => {
+  const currentURL = new URL(location.href);
+  const listOfATag = [...root.querySelectorAll('a')];
+  const targets = listOfATag
+    .filter(hasHREF)
+    .filter(withoutHash)
+    .filter(isSameOriginWith(currentURL));
+
+  targets.forEach(a => {
+    a.addEventListener('click', async e => {
+      e.preventDefault();
+      const dest = (e.target as HTMLAnchorElement).href;
+      const res = await getHTML(dest);
+      replaceDOM(res);
+      history.pushState(serialize(res), '', dest);
+    });
+  });
+};
+
 const onPopstate = (ev: PopStateEvent): void => {
   restorePage(ev.state);
 };
 
-const observe = (root: Element): void => {
-  const mo = new MutationObserver(mutations => {
-    console.log('mutation');
-    for (const mutation of mutations) {
-      switch (mutation.type) {
-        case 'childList':
-          // TODO:
-          break;
+const onMutation: MutationCallback = (mutations: MutationRecord[]) => {
+  console.log('mutation');
+  mutations
+    .filter(m => m.type === 'childList')
+    .forEach(() => {
+      const root_ = document.querySelector(`#${ID}`);
+      if (root_ !== null) {
+        setup(root_);
       }
-    }
-  });
-
-  mo.observe(root, { childList: true });
+    });
 };
 
-const setup = (id: string): void => {
-  const button = document.querySelector(`#${id}`)!;
-
-  button.addEventListener('click', async () => {
-    const res = await getHTML(`/${id}.html`);
-    replaceDOM(res);
-    history.pushState(serialize(res), '', `/${id}.html`);
-  });
+const observe = (root: Element): void => {
+  const mo = new MutationObserver(onMutation);
+  mo.observe(root, { childList: true });
 };
 
 const main = () => {
   saveCurrentState();
   const root = document.querySelector(`#${ID}`)!;
   observe(root);
-
-  setup('sample');
-  setup('index');
-
+  setup(root);
   window.addEventListener('popstate', onPopstate);
 };
 
