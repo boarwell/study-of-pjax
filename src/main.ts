@@ -1,3 +1,5 @@
+const ID = 'domrep-root';
+
 type DOM = {
   head: HTMLHeadElement;
   root: HTMLElement;
@@ -18,7 +20,7 @@ const createDOMFrom = (html: string): DOM => {
 
   return {
     head: dom.head,
-    root: dom.querySelector('#domrep-root') as HTMLElement
+    root: dom.querySelector(`${ID}`) as HTMLElement
   };
 };
 
@@ -48,7 +50,7 @@ const replaceHead = (newDOM: DOM): void => {
 };
 
 const replaceRoot = (newDOM: DOM): void => {
-  const root = document.querySelector('#domrep-root') as HTMLElement;
+  const root = document.querySelector(`#${ID}`) as HTMLElement;
   // if we use `replaceWith()` to the observed element,
   // it doesn't fire mutation event.
   root.innerHTML = '';
@@ -88,7 +90,7 @@ const observe = (): void => {
     }
   });
 
-  const root = document.querySelector('#domrep-root')!;
+  const root = document.querySelector(`#${ID}`)!;
   mo.observe(root, { childList: true });
 };
 

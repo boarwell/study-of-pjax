@@ -1,4 +1,5 @@
 "use strict";
+const ID = 'domrep-root';
 const serialize = ({ head, root }) => {
     const headHTML = head.outerHTML;
     const rootHTML = root.outerHTML;
@@ -9,7 +10,7 @@ const createDOMFrom = (html) => {
     const dom = dp.parseFromString(html, 'text/html');
     return {
         head: dom.head,
-        root: dom.querySelector('#domrep-root')
+        root: dom.querySelector(`${ID}`)
     };
 };
 const restorePage = (serializedDOMString) => {
@@ -32,7 +33,7 @@ const replaceHead = (newDOM) => {
     document.head.replaceWith(newDOM.head);
 };
 const replaceRoot = (newDOM) => {
-    const root = document.querySelector('#domrep-root');
+    const root = document.querySelector(`#${ID}`);
     // if we use `replaceWith()` to the observed element,
     // it doesn't fire mutation event.
     root.innerHTML = '';
@@ -67,7 +68,7 @@ const observe = () => {
             }
         }
     });
-    const root = document.querySelector('#domrep-root');
+    const root = document.querySelector(`#${ID}`);
     mo.observe(root, { childList: true });
 };
 const main = () => {
