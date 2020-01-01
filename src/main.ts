@@ -21,9 +21,7 @@ const serialize = ({ head, root }: DOM): string => {
  * full (fetched) html to dom elements
  */
 const createDOMFrom = (html: string): DOM => {
-  // TODO: doesn't need capture this variable
-  const dp = new DOMParser();
-  const dom = dp.parseFromString(html, 'text/html');
+  const dom = new DOMParser().parseFromString(html, 'text/html');
 
   return {
     head: dom.head,
