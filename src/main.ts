@@ -7,6 +7,9 @@ type DOM = {
 
 type SerializedDOM = { [P in keyof DOM]: string };
 
+/**
+ * convert dom elements to string
+ */
 const serialize = ({ head, root }: DOM): string => {
   const headHTML = head.outerHTML;
   const rootHTML = root.outerHTML;
@@ -14,7 +17,11 @@ const serialize = ({ head, root }: DOM): string => {
   return JSON.stringify({ head: headHTML, root: rootHTML });
 };
 
+/**
+ * full (fetched) html to dom elements
+ */
 const createDOMFrom = (html: string): DOM => {
+  // TODO: doesn't need capture this variable
   const dp = new DOMParser();
   const dom = dp.parseFromString(html, 'text/html');
 
@@ -24,6 +31,9 @@ const createDOMFrom = (html: string): DOM => {
   };
 };
 
+/**
+ * rewrite current page by the argument
+ */
 const restorePage = (serializedDOMString: string): void => {
   const state: SerializedDOM = JSON.parse(serializedDOMString);
   const head = document.createElement('head');
@@ -36,6 +46,9 @@ const restorePage = (serializedDOMString: string): void => {
   replaceDOM(dom);
 };
 
+/**
+ * fetch html from the src and create dom element
+ */
 const getHTML = async (src: string): Promise<DOM> => {
   // if we don't specify { cache: 'no-store' },
   // Chrome caches responses and doesn't send request (on my environment).
@@ -45,10 +58,16 @@ const getHTML = async (src: string): Promise<DOM> => {
   return createDOMFrom(html);
 };
 
+/**
+ * replace head element
+ */
 const replaceHead = (newDOM: DOM): void => {
   document.head.replaceWith(newDOM.head);
 };
 
+/**
+ * replace root element
+ */
 const replaceRoot = (newDOM: DOM): void => {
   const root = document.querySelector(`#${ID}`) as HTMLElement;
   // if we use `replaceWith()` to the observed element,
@@ -57,6 +76,9 @@ const replaceRoot = (newDOM: DOM): void => {
   root.appendChild(newDOM.root);
 };
 
+/**
+ * (currently) replace head and root element
+ */
 const replaceDOM = (newDOM: DOM): void => {
   replaceHead(newDOM);
   replaceRoot(newDOM);
@@ -74,11 +96,15 @@ const saveCurrentState = (): void => {
   history.replaceState(serialize(createDOMFrom(html)), '', null);
 };
 
-const hasHREF = (a: HTMLAnchorElement) => a.href !== '';
-const withoutHash = (a: HTMLAnchorElement) => new URL(a.href).hash === '';
-const isSameOriginWith = (currentURL: URL) => (a: HTMLAnchorElement) =>
-  new URL(a.href).origin === currentURL.origin;
+const hasHREF = ({ href }: HTMLAnchorElement) => href !== '';
+const withoutHash = ({ href }: HTMLAnchorElement) => new URL(href).hash === '';
+const isSameOriginWith = (currentURL: URL) => ({ href }: HTMLAnchorElement) =>
+  new URL(href).origin === currentURL.origin;
 
+/**
+ * set an eventListener for <a> tags:
+ * fetch the target HTML, replace DOM, and pushState
+ */
 const setup = (root: Element): void => {
   const currentURL = new URL(location.href);
   const listOfATag = [...root.querySelectorAll('a')];
@@ -98,10 +124,17 @@ const setup = (root: Element): void => {
   });
 };
 
+/**
+ * restore page content
+ */
 const onPopstate = (ev: PopStateEvent): void => {
   restorePage(ev.state);
 };
 
+/**
+ * when the mutation type is 'childList',
+ * get the root element and setup
+ */
 const onMutation: MutationCallback = (mutations: MutationRecord[]) => {
   console.log('mutation');
   mutations
@@ -114,6 +147,9 @@ const onMutation: MutationCallback = (mutations: MutationRecord[]) => {
     });
 };
 
+/**
+ * main
+ */
 const main = () => {
   saveCurrentState();
   const root = document.querySelector(`#${ID}`)!;
